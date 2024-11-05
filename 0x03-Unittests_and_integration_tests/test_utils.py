@@ -62,5 +62,13 @@ class TestGetJson(unittest.TestCase):
             mock_get.assert_called_once_with(test_url)
 
 
+class TestMemoize(unittest.TestCase):
+    """Test class
+    """
+    def test_memoize(self):
+        """Test method
+        """
+
+
 if __name__ == "__main__":
     unittest.main()
