@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import mysql.connector
 
 seed = __import__('seed')
 
