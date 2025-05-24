@@ -4,8 +4,8 @@ import functools
 def with_db_connection(func):
     """automatically handles opening and closing database connections""" 
     def wrapper_with_db_connection(*args, **kwargs):
+        conn = sqlite3.connect('users.db')
         try:
-            conn = sqlite3.connect('users.db')
             kwargs['conn'] = conn
             return func(*args, **kwargs)
         except Exception as e:
