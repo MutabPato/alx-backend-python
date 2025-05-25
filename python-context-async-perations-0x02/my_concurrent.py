@@ -1,22 +1,35 @@
 import asyncio
-import aiosqlite
+import os
+from mysql.connector.aio import connect
 
 class ExecuteQuery():
-    """connects to sqlite and executes a query"""
-    def __init__(self, db_name, query, param=None):
+    """handle opening and closing database connections automatically"""
+    def __init__(self, db_host, db_user, db_password, db_name, query, param=None):
         print("Initializing ExecuteQuery")
+        self.db_host = db_host
+        self.db_user = db_user
+        self.db_password = db_password
         self.db_name = db_name
+        self.conn = None
         self.query = query
         self.param = param
-        self.conn = None
 
     async def __aenter__(self):
+        
         print(f"DEBUG: Connecting with:")
+        print(f"DEBUG: Host: {self.db_host}")
+        print(f"DEBUG: User: {self.db_user}")
+        print(f"DEBUG: Password: {'*' * len(self.db_password) if self.db_password else 'None/Empty'}")
         print(f"DEBUG: Database: {self.db_name}")
         print("_" * 20)
 
         try:
-            self.conn = await aiosqlite.connect(self.db_name)
+            self.conn = await connect(
+            host=self.db_host,
+            user=self.db_user,
+            password=self.db_password,
+            database=self.db_name
+            )
             cursor = await self.conn.cursor()
             if self.param:
                 await cursor.execute(self.query, self.param)
@@ -26,7 +39,7 @@ class ExecuteQuery():
             await cursor.close()
             return result
                 
-        except Exception as err:
+        except connect.Error as err:
             print(f"Error executing query (\"{self.query}\", {self.param}): {err}")
             raise(err)
         
@@ -38,7 +51,10 @@ class ExecuteQuery():
 async def async_fetch_users():
     """fetches all users"""
     async with ExecuteQuery(
-    "users.db",
+    os.environ.get("MY_DB_HOST"), 
+    os.environ.get("MY_DB_USER"), 
+    os.environ.get("MY_DB_PASSWORD"), 
+    os.environ.get("MY_DB_NAME"),
     "SELECT * FROM user_data"
     ) as result:
         print(result)
@@ -46,8 +62,11 @@ async def async_fetch_users():
 async def async_fetch_older_users():
     """fetches users older than 40"""
     async with ExecuteQuery(
-    "users.db",
-    "SELECT * FROM user_data WHERE age > ?",
+    os.environ.get("MY_DB_HOST"), 
+    os.environ.get("MY_DB_USER"), 
+    os.environ.get("MY_DB_PASSWORD"), 
+    os.environ.get("MY_DB_NAME"),
+    "SELECT * FROM user_data WHERE age > %s",
     (40,)
     ) as result:
         print(result)
