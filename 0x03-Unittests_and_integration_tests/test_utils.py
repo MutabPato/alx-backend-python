@@ -7,7 +7,7 @@ class TestAccessNestedMap(unittest.TestCase):
     """
     Test class
     """
-    @parameterized.expand((nested_map, path, output)[
+    @parameterized.expand([
         ({"a": 1}, ("a",), 1),
         ({"a": {"b": 2}}, ("a",), {'b': 2}),
         ({"a": {"b": 2}}, ("a", "b"), 2),
@@ -16,4 +16,4 @@ class TestAccessNestedMap(unittest.TestCase):
         """
         Test method
         """
-        assertEqual(access_nested_map(nested_map, path), output)
+        self.assertEqual(access_nested_map(nested_map, path), output)
