@@ -52,12 +52,24 @@ class TestMemoize(unittest.TestCase):
     Test class for the utils.memoized function
     """
     def test_memoize(self):
+        """
+        Test for memoization
+        """
         class TestClass:
+            """
+            Class to pacth
+            """
             def a_method(self):
+                """
+                Method return an integer 42
+                """
                 return 42
 
             @memoize
             def a_property(self):
+                """
+                Memoized method return result of a_method
+                """
                 return self.a_method()
             
         instance = TestClass()
