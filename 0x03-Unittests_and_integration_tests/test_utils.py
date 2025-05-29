@@ -4,6 +4,7 @@ from parameterized import parameterized
 from utils import access_nested_map, get_json, memoize
 from unittest.mock import Mock, patch
 
+
 class TestAccessNestedMap(unittest.TestCase):
     """
     Test class for the utils..access_nested_map funtion
@@ -21,7 +22,7 @@ class TestAccessNestedMap(unittest.TestCase):
 
     @parameterized.expand([
         ({}, ("a",)),
-        ({"a": 1}, ("a","b")),
+        ({"a": 1}, ("a", "b")),
     ])
     def test_access_nested_map_exception(self, nested_map, path):
         """
@@ -29,6 +30,7 @@ class TestAccessNestedMap(unittest.TestCase):
         """
         with self.assertRaises(KeyError):
             access_nested_map(nested_map, path)
+
 
 class TestGetJson(unittest.TestCase):
     """
@@ -46,6 +48,7 @@ class TestGetJson(unittest.TestCase):
         for _ in mock_get(test_url):
             mock_get.json.return_value = test_payload
             mock_get.assert_called_once()
+
 
 class TestMemoize(unittest.TestCase):
     """
@@ -71,7 +74,7 @@ class TestMemoize(unittest.TestCase):
                 Memoized method return result of a_method
                 """
                 return self.a_method()
-            
+
         instance = TestClass()
 
         with patch.object(instance, 'a_method') as mck_fn:
@@ -79,4 +82,3 @@ class TestMemoize(unittest.TestCase):
             instance.a_property()
 
             mck_fn.assert_called_once()
-        
