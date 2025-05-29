@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
+
+"""
+Test suite for utils.py
+"""
+
 import unittest
+from unittest.mock import patch
 from parameterized import parameterized
-from utils import access_nested_map, get_json, memoize
-from unittest.mock import Mock, patch
+from utils import access_nested_map, memoize
 
 
 class TestAccessNestedMap(unittest.TestCase):
@@ -43,6 +48,7 @@ class TestGetJson(unittest.TestCase):
     @patch('requests.get')
     def test_get_json(self, test_url, test_payload, mock_get):
         """
+        Mocks http calls
         """
         mock_get.return_value.json.return_value = {"payload": True}
         for _ in mock_get(test_url):
