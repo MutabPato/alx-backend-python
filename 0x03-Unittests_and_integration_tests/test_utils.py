@@ -7,7 +7,11 @@ Test suite for utils.py
 import unittest
 from unittest.mock import patch
 from parameterized import parameterized
-from utils import access_nested_map, memoize
+from utils import (
+    access_nested_map,
+    memoize,
+    get_json
+    )
 
 
 class TestAccessNestedMap(unittest.TestCase):
@@ -33,8 +37,9 @@ class TestAccessNestedMap(unittest.TestCase):
         """
         Test for an exception
         """
-        with self.assertRaises(KeyError):
+        with self.assertRaises(KeyError) as cm:
             access_nested_map(nested_map, path)
+            self.assertEqual(str(cm.exception), f"'{path[-1]}'")
 
 
 class TestGetJson(unittest.TestCase):
@@ -50,10 +55,10 @@ class TestGetJson(unittest.TestCase):
         """
         Mocks http calls
         """
-        mock_get.return_value.json.return_value = {"payload": True}
-        for _ in mock_get(test_url):
-            mock_get.json.return_value = test_payload
-            mock_get.assert_called_once()
+        mock_get.return_value.json.return_value = test_payload
+        output = get_json(test_url)
+        mock_get.assert_called_once_with(test_url)
+        self.assertDictEqual(test_payload, output)
 
 
 class TestMemoize(unittest.TestCase):
@@ -84,7 +89,9 @@ class TestMemoize(unittest.TestCase):
         instance = TestClass()
 
         with patch.object(instance, 'a_method') as mck_fn:
-            instance.a_property()
-            instance.a_property()
-
+            mck_fn.return_value = 42
+            result1 = instance.a_property
+            result2 = instance.a_property
+            self.assertEqual(result1, 42)
+            self.assertEqual(result2, 42)
             mck_fn.assert_called_once()
