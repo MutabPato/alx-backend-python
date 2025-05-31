@@ -5,8 +5,9 @@ Test suite for client.py
 """
 
 import unittest
-from unittest.mock import patch, PropertyMock
-from parameterized import parameterized
+from unittest.mock import patch, PropertyMock, MagicMock
+from parameterized import parameterized, parameterized_class
+import fixtures
 from client import GithubOrgClient
 
 
@@ -14,35 +15,6 @@ class TestGithubOrgClient(unittest.TestCase):
     """
     Test class for client.GithubOrgClient
     """
-    @classmethod
-    def setUpClass(cls):
-        cls.google_api_response = {
-                'login': 'google', 'id': 1342004,
-                'node_id': 'MDEyOk9yZ2FuaXphdGlvbjEzNDIwMDQ=',
-                'url': 'https://api.github.com/orgs/google',
-                'repos_url': 'https://api.github.com/orgs/google/repos',
-                'events_url': 'https://api.github.com/orgs/google/events',
-                'hooks_url': 'https://api.github.com/orgs/google/hooks',
-                'issues_url': 'https://api.github.com/orgs/google/issues',
-                'members_url': 'https://api.github.com/' +
-                'orgs/google/members{/member}',
-                'public_members_url': 'https://api.github.com/' +
-                'orgs/google/public_members{/member}',
-                'avatar_url': 'https://avatars.githubusercontent.com/' +
-                'u/1342004?v=4',
-                'description': 'Google ❤️ Open Source', 'name': 'Google',
-                'company': None, 'blog': 'https://opensource.google/',
-                'location': 'United States of America',
-                'email': 'opensource@google.com',
-                'twitter_username': 'GoogleOSS',
-                'is_verified': True, 'has_organization_projects': True,
-                'has_repository_projects': True, 'public_repos': 2770,
-                'public_gists': 0, 'followers': 54958, 'following': 0,
-                'html_url': 'https://github.com/google',
-                'created_at': '2012-01-18T01:30:18Z',
-                'updated_at': '2024-08-09T17:36:18Z',
-                'archived_at': None, 'type': 'Organization'
-                }
 
     @parameterized.expand([
         ('google', {
@@ -206,3 +178,55 @@ class TestGithubOrgClient(unittest.TestCase):
         Test function for GithubOrgClient.has_license
         """
         self.assertIs(GithubOrgClient.has_license(repo, license_key), status)
+
+
+@parameterized_class([
+    {
+        "org_payload": fixtures.TEST_PAYLOAD[0][0],
+        "repos_payload": fixtures.TEST_PAYLOAD[0][1],
+        "expected_repos": fixtures.TEST_PAYLOAD[0][2],
+        "apache2_repos": fixtures.TEST_PAYLOAD[0][3]
+        }
+])
+class TestIntegrationGithubOrgClient(unittest.TestCase):
+    """
+    Integration Test Suite
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        Sets ups mocks for requests.get to return
+        example payloads found in the fixtures.
+        """
+        cls.get_patcher = patch("requests.get")
+        cls.mock_get = cls.get_patcher.start()
+
+        mock_org_response = MagicMock()
+        mock_org_response.json.return_value = cls.org_payload
+
+        mock_repos_response = MagicMock()
+        mock_repos_response.json.return_value = cls.repos_payload
+
+        cls.mock_get.side_effect = [
+            mock_org_response,
+            mock_repos_response,
+            ]
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        class method to stop the patcher
+        """
+        cls.get_patcher.stop()
+
+    def test_public_repos(self):
+        """
+        Test function for GithubOrgClient.public_repos
+        """
+        client = GithubOrgClient('google')
+        self.assertEqual(
+            client._public_repos_url, self.org_payload["repos_url"]
+            )
+        repos = client.public_repos()
+        self.assertListEqual(repos, self.expected_repos)
