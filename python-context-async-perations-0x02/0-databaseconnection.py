@@ -41,3 +41,4 @@ with DatabaseConnection(os.environ.get("MY_DB_HOST"), os.environ.get("MY_DB_USER
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users") 
     print(cursor.fetchall())
+
