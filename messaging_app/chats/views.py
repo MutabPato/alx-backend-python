@@ -1,6 +1,8 @@
-from rest_framework import viewsets, permissions, serializers
+from rest_framework import viewsets, permissions, serializers, status
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
+from rest_framework.response import Response
+from django_filters import rest_framework as filters
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
