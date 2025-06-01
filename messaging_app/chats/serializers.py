@@ -4,10 +4,11 @@ from .models import User, Conversation, Message
 class UserListSerializer(serializers.ModelSerializer):
     # For listing/nesting info without sensitive info
     full_name = serializers.SerializerMethodField()
+    last_name = serializers.CharField(blank=True, required=False)
 
     class Meta:
         model = User
-        fields = ('user_id', 'email', 'first_name', 'last_name', 'phone_number')
+        fields = ('user_id', 'email', 'first_name', 'last_name', 'phone_number', 'full_name')
 
     def get_full_name(self, obj):
         """
