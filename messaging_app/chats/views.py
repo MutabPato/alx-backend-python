@@ -41,44 +41,44 @@ class MessageViewSet(viewsets.ModelViewSet):
         """
         Filter messages to only those within a conversation the current user is part of
         """
-        if self.request.user.is_authenticated:
+        if not self.request.user.is_authenticated:
+            return Message.objects.none()
+        
+        conversation_pk = self.kwargs.get('conversation_pk')
+
+        if not conversation_pk:
             user_conversations = Conversation.objects.filter(participants=self.request.user)
-
-            # filter by a specific conversation (e.g., /messages/?conversation_if=<uuid>)
-            conversation_id = self.request.query_params.get('conversation_id')
-            if conversation_id:
-                try:
-                    conversation = user_conversations.get(conversation_id=conversation_id)
-                    return Message.objects.filter(conversation=conversation).order_by('created_at')
-                except Conversation.DoesNotExist:
-                    return Message.objects.none()
-
-            # if no specific conversation_id, return all messages from user's conversations
             return Message.objects.filter(conversation__in=user_conversations).order_by('created_at')
-        return Message.objects.none()
+        
+        try:
+            conversation = Conversation.objects.get(
+                conversation_id=conversation_pk,
+                participants=self.request.user
+            )
+        except Conversation.DoesNotExist:
+            return Message.objects.none()
+        
+        return Message.objects.filter(conversation=conversation).order_by('created_at')
     
     def perform_create(self, serializer):
         """
         Automatically assign authenticated user as sender
         """
-        conversation_id = self.request.data.get('conversation_id')
-        if conversation_id:
-            try:
-                conversation = Conversation.objects.filter(
-                    participants=self.request.user, conversation_id=conversation_id
-                    ).first()
-                if not conversation:
-                    raise serializers.ValidationError(
-                        {"conversation_id": "Invalid conversation ID or you are not a participant."}
-                        )
-                
-                serializer.save(sender=self.request.user, conversation=conversation)
-            
-            except ValueError:
-                raise serializers.ValidationError(
-                    {"conversation_id": "Conversation ID is required."}
-                    )
+        conversation_pk = self.kwargs.get('conversation_pk')
+        if not conversation_pk:
+            raise serializers.ValidationError({"detail": "Conversation ID must be provided in the URL path."})
+        try:
+            conversation = Conversation.objects.get(
+                conversation_id=conversation_pk,
+                participants=self.request.user
+            )
+        except Conversation.DoesNotExist:
+            raise serializers.ValidationError(
+                {"conversation_id": "Invalid conversation ID or you are not a participant of this conversation"}
+            )
         
+        serializer.save(sender=self.request.user, conversation=conversation)
+
     def perform_update(self, serializer):
         """
         Prevents users from changing sender or conversation of existing messages.
