@@ -11,7 +11,7 @@ class User(AbstractUser):
     """
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(_('email address'), unique=True)
-    password = models.CharField(_('password'),max_length=100)
+    # password = models.CharField(_('password'),max_length=100)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=100)
