@@ -1,7 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django import forms
 
 
@@ -11,7 +11,6 @@ class User(AbstractUser):
     """
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(_('email address'), unique=True)
-    # password = models.CharField(_('password'),max_length=100)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=100)
