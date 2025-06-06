@@ -16,6 +16,7 @@ class IsSenderOrReadOnly(permissions.BasePermission):
             return True
 
         # Write permissions are only allowd to sender of message.
+        # can perform POST, PUT, PATCH and DELETE
         # 'obj' is the Message instance and 'obj.sender' is the User instance
         return obj.sender == request.user
 

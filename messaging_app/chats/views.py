@@ -49,7 +49,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         Filter messages to only those within a conversation the current user is part of
         """
         if not self.request.user.is_authenticated:
-            return Message.objects.none()
+            return Response(status=status.HTTP_403_FORBIDDEN)
         
         conversation_pk = self.kwargs.get('conversation_pk')
 
