@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django_filters import rest_framework as filters
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
-
+from .permissions import IsParticipantOfConversation, IsSenderOrReadOnly
 
 class ConversationViewSet(viewsets.ModelViewSet):
     """
@@ -15,7 +15,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ConversationSerializer
     authentication_class = [JWTAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsParticipantOfConversation]
     
     def get_queryset(self):
         """
@@ -42,7 +42,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     serializer_class = MessageSerializer
     authentication_class = [JWTAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSenderOrReadOnly]
 
     def get_queryset(self):
         """

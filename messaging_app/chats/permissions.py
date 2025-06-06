@@ -1,26 +1,34 @@
-from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 
 
-class HasRoleEditor(BasePermission):
+class IsSenderOrReadOnly(permissions.BasePermission):
     """
-    Allow access only to users with the 'editor' role in their JWT
+    Allow only participants in a conversation to send, 
+    view, update and delete messages
+    Read-only access is allowed for authenticated user.
     """
-    message = "You do not have permission to perform this action (requires 'editor' role)."
+    message = "You do not have permission to perform this action."
 
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request
+        # GET, HEAD, OPTIONS are allowed
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Write permissions are only allowd to sender of message.
+        # 'obj' is the Message instance and 'obj.sender' is the User instance
+        return obj.sender == request.user
+
+
+class IsParticipantOfConversation(permissions.BasePermission):
+    """
+    Allow only authenticated users to access the api/view, manage conversation
+    """
+
+    def has_object_permission(self, request, view, obj):
+        # 'obj' is the Conversation instance
+        return request.user in obj.participants.all()
+    
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
-        
-        token = request.auth
-        if not token:
-            return False
-        
-        user_roles = token.get('roles', [])
-        return 'editor' in user_roles
-
-"""class MyResourceView(APIView):
-    permission_classes = [IsAuthenticated, HasRoleEditor]
-
-    def post(self, request):
-        return Response({"message": "Resource created by an editor."})
-"""
+        # For list view, ensure user is authenticated
+        return request.user and request.user.is_authenticated
