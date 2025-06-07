@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'chats',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
+    'django_filters'
 ]
 
 INSTALLED_APPS += [
@@ -139,7 +140,13 @@ REST_FRAMEWORK = {
             ],
         'DEFAULT_PERMISSION_CLASSES': [
             'rest_framework.permissions.IsAuthenticated',
-            ]
+            ],
+            'DEFAULT_PAGINATION_CLASS': [
+                'rest_framework.pagination.PageNumberPagination',
+                'chats.pagination.CustomPagination'
+                ],
+            'PAGE_SIZE': 20,
+            'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
         }
 
 SIMPLE_JWT = {
