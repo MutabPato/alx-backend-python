@@ -1,11 +1,14 @@
 from rest_framework import viewsets, permissions, serializers, status
-from .models import Conversation, Message, User
-from .serializers import ConversationSerializer, MessageSerializer
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django_filters import rest_framework as filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
+from .models import Conversation, Message, User
+from .serializers import ConversationSerializer, MessageSerializer
+from .filters import MessageFilter
 from .permissions import IsParticipantOfConversation, IsSenderOrReadOnly
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -43,6 +46,9 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     authentication_class = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsSenderOrReadOnly]
+    pagination_class = PageNumberPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = MessageFilter
 
     def get_queryset(self):
         """
@@ -133,3 +139,4 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={"detail": str(e)})
+        
