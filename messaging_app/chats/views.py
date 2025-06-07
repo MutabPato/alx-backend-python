@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
-from rest_framework.pagination import PageNumberPagination
+from .pagination import CustomPagination
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
 from .filters import MessageFilter
@@ -46,7 +46,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     authentication_class = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsSenderOrReadOnly]
-    pagination_class = PageNumberPagination
+    pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = MessageFilter
 
