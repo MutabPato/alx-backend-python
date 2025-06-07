@@ -4,11 +4,11 @@ from django import forms
 
 
 class UserCreationForm(UserCreationForm):
-
+    
     password = forms.CharField(widget=forms.PasswordInput)
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'phone_number')
+        fields = ('email', 'first_name', 'last_name', 'phone_number', 'username')
 
 
 class UserChangeForm(UserChangeForm):

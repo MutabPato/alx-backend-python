@@ -101,10 +101,10 @@ class MessageSerializer(serializers.ModelSerializer):
         read_only_fields = ('message_id', 'created_at', 'sender', 'conversation')
 
 
-"""class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
 
         token['username'] = user.name
-        return token"""
+        return token

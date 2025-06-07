@@ -11,7 +11,7 @@ class User(AbstractUser):
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(_('email address'), unique=True)
     first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=100)
     username = models.CharField(max_length=100, unique=True)
 
@@ -19,7 +19,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['first_name', 'phone_number', 'username']
 
     def __str__(self):
-        return f"{self.username}({self.email})"
+        return f"{self.username}(email: '{self.email}', id: '{self.user_id}')"
     
 
 class Conversation(models.Model):
