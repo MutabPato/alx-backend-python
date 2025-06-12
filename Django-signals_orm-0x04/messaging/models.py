@@ -71,6 +71,12 @@ class MessageHistory(models.Model):
         related_name="history_entries",
         verbose_name="Original Message"
         )
+    edited_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='editor',
+        verbose_name="Edited By"
+    )
     old_content = models.TextField(verbose_name="Old Content")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Saved At")
 

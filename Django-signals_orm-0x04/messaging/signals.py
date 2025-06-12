@@ -44,6 +44,7 @@ def log_message_edit(sender, instance, **kwargs):
                 with transaction.atomic():
                     MessageHistory.objects.create(
                         message=old_message,
+                        edited_by=old_message.sender,
                         old_content=old_message.content
                     )
                     instance.edited = True
