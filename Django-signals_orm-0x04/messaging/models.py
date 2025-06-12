@@ -7,7 +7,7 @@ class Message(models.Model):
     sender = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='sent_messages',
+        related_name='sent_texts',
         verbose_name="Sender"
         )
     receiver = models.ForeignKey(
@@ -24,7 +24,7 @@ class Message(models.Model):
     edited_at = models.DateTimeField(auto_now=True, verbose_name="Last Edited At")
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-timestamp']
         verbose_name = "Message"
         verbose_name_plural = "Messages"
 

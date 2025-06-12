@@ -1,6 +1,6 @@
 import logging
-from django.db.models.signals import post_save, pre_save
-from .models import Message, Notification, MessageHistory
+from django.db.models.signals import post_save, pre_save, post_delete
+from .models import Message, Notification, MessageHistory, User
 from django.dispatch import receiver
 from django.db import transaction
 
@@ -63,3 +63,14 @@ def log_message_edit(sender, instance, **kwargs):
 
     else:
         logger.info(f"New message (ID will be {instance.pk if instance.pk else 'unkown'}) being created. No history logged yet.")
+
+
+@receiver(post_delete, sender=User)
+def deleted_user_signal(sender, instance, **kwargs):
+    """
+    Automatically clean up related data when a user deletes their account
+    """
+    if instance:
+        logger.error("Deletion of user with ID: '{instance.id}' was not successful")
+    else:
+        logger.warning("User with ID {sender.id} has been deleted")
