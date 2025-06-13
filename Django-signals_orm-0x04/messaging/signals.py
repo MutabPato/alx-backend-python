@@ -73,4 +73,6 @@ def deleted_user_signal(sender, instance, **kwargs):
     if instance:
         logger.error("Deletion of user with ID: '{instance.id}' was not successful")
     else:
+        user_messages = Message.objects.filter(sender=sender)
+        user_messages.delete()
         logger.warning("User with ID {sender.id} has been deleted")
