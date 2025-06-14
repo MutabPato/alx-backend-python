@@ -17,6 +17,13 @@ class Message(models.Model):
         related_name='received_messages',
         verbose_name="Receiver"
         )
+    parent_message = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='message_thread'
+        )
     content = models.TextField(verbose_name="Message Content")
     timestamp = models.DateTimeField( # field name set in task details same as created_at
         auto_now_add=True, verbose_name="Created At"
@@ -31,7 +38,7 @@ class Message(models.Model):
 
     def __str__(self):
         content_display = self.content[:75]
-        if content_display > 75:
+        if len(self.content) > 75:
             content_display+='...'
         return f"Msg from {self.sender.username} to {self.receiver.username} at {self.timestamp.strftime('%Y-%m-%d %H:%M')}: \"{content_display}\""
 

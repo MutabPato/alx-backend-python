@@ -1,8 +1,11 @@
 import logging
 from django.db.models.signals import post_save, pre_save, post_delete
-from .models import Message, Notification, MessageHistory, User
+from .models import Message, Notification, MessageHistory
 from django.dispatch import receiver
 from django.db import transaction
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
@@ -16,17 +19,17 @@ def message_post_save_receiver(sender, instance, created, **kwargs):
     if created:
         try:
             Notification.objects.create(
-                detail="You have a new message from {instance.sender.username}!",
+                detail=f"You have a new message from {instance.sender.username}!",
                 user=instance.receiver,
                 message=instance
                 )
-            print(
+            logger.info(
                 f"Notification created for {instance.receiver.username} "
                 f"due to new message from {instance.sender.username} (ID: {instance.id})"
             )
 
         except Exception as e:
-            print(f"Error creating notification for message ID: {instance.id}: {e}")
+            logger.error(f"Error creating notification for message ID: {instance.id}: {e}")
 
 
 @receiver(pre_save, sender=Message)
@@ -70,9 +73,7 @@ def deleted_user_signal(sender, instance, **kwargs):
     """
     Automatically clean up related data when a user deletes their account
     """
-    if instance:
-        logger.error("Deletion of user with ID: '{instance.id}' was not successful")
-    else:
-        user_messages = Message.objects.filter(sender=sender)
-        user_messages.delete()
-        logger.warning("User with ID {sender.id} has been deleted")
+    
+    user_messages = Message.objects.filter(sender=instance) # This id redundant because message deletion is handled by on_delete=models.CASCADE
+    user_messages.delete()
+    logger.warning("User '{instance.username}' with ID {instance.id} and related data has been deleted suceesfully")
