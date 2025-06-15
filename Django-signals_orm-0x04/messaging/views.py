@@ -57,7 +57,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             Q(sender=self.request.user) | Q(receiver=self.request.user)
             )
         # sender=request.user, Message.objects.filter to satisfy checker requirements
-    
+
     def perform_create(self, serializer):
         """
         Automatically sets the sender of the message to the current authenticated user
@@ -146,6 +146,41 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         return Response(threaded_data)
     
+    @action(detail=False, methods=['get'])
+    def unread(self, request):
+        """
+        Custom action to retrieve all unread messages for the current user.
+        Access via /api/messages/unread/
+        """
+        unread_messages = Message.unread_messages.filter_unread().select_related(
+            'sender', 'receiver', 'parent_message'
+            ).filter(receiver=request.user)
+        
+        serializer = self.get_serializer(unread_messages, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        """
+        Custom action to mark a specific message as read for the current user.
+        Access via /api/messages/{id}/mark_read
+        """
+        try:
+            # Only allow marking as read if the user is the receiver and the message is unread
+            message = self.get_queryset().get(pk=pk, receiver=request.user, unread=True)
+        except Message.DoesNotExist:
+            return Response(
+                {"detail": "Message not found or not an unread message for this user."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        message.unread = False
+        message.save(update_fields=['unread'])
+
+        serializer = self.get_serializer(message)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class NotificationViewSet(viewsets.ModelViewSet):
     """

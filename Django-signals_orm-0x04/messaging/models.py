@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from .managers import UnreadMessagesManager
 
 User = get_user_model()
 
@@ -21,7 +22,7 @@ class Message(models.Model):
         'self',
         null=True,
         blank=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='message_thread'
         )
     content = models.TextField(verbose_name="Message Content")
@@ -29,7 +30,13 @@ class Message(models.Model):
         auto_now_add=True, verbose_name="Created At"
         ) 
     edited = models.BooleanField(default=False, verbose_name="Edited")
+
     edited_at = models.DateTimeField(auto_now=True, verbose_name="Last Edited At")
+
+    unread = models.BooleanField(default=True, verbose_name="Unead")
+
+    objects = models.Manager() # The default manager
+    unread_messages = UnreadMessagesManager() # Custom manager
 
     class Meta:
         ordering = ['-timestamp']

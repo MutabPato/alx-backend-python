@@ -53,8 +53,9 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ['id', 'sender', 'receiver', 'parent_message', 'content', 'timestamp', 'edited', 'edited_at', 'message_thread']
-        read_only_fields = ['timestamp', 'edited', 'edited_at']
+        fields = ['id', 'sender', 'receiver', 'parent_message', 'content',
+                  'timestamp', 'edited', 'edited_at', 'unread','message_thread']
+        read_only_fields = ['timestamp', 'edited', 'edited_at', 'unread']
 
     def get_message_thread(self, obj):
         """
