@@ -204,5 +204,7 @@ class MessageHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         Admins can see all history.
         """
         if self.request.user.is_staff or self.request.user.is_superuser:
-            return MessageHistory.objects.all()
-        return MessageHistory.objects.filter(message__sender=self.request.user) | MessageHistory.objects.filter(message__receiver=self.request.user)
+            return MessageHistory.objects.prefetch_related('message', 'edited_by').all()
+        return MessageHistory.objects.prefetch_related('message', 'edited_by').filter(
+            Q(message__sender=self.request.user) | Q(message__receiver=self.request.user)
+        )
