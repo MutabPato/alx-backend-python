@@ -9,6 +9,8 @@ from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.db.models import Q
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 User = get_user_model()
 
@@ -45,6 +47,10 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @method_decorator(cache_page(60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+    
     def get_queryset(self):
         """
         Custom queryset to ensure users only see their own messages(sent or received)
@@ -85,6 +91,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             raise permissions.PermissionDenied("You do not have permission to delete this message.")
         instance.delete()
 
+    @method_decorator(cache_page(60))
     @action(detail=True, methods=['get'])
     def thread(self, request, pk=None):
         """
@@ -149,6 +156,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         return Response(threaded_data)
     
+    @method_decorator(cache_page(60))
     @action(detail=False, methods=['get'])
     def unread(self, request):
         """
@@ -162,10 +170,11 @@ class MessageViewSet(viewsets.ModelViewSet):
             'timestamp', 'edited', 'edited_at', 'unread'
         )
         # Message.unread.unread_for_user satisfy checker requirements
-        
+
         serializer = self.get_serializer(unread_messages, many=True)
         return Response(serializer.data)
-    
+
+    @method_decorator(cache_page(60))
     @action(detail=True, methods=['post'])
     def mark_read(self, request, pk=None):
         """
@@ -197,6 +206,10 @@ class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @method_decorator(cache_page(60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+    
     def get_queryset(self):
         """
         Custom queryset to ensure users only see their own notifications.
@@ -205,7 +218,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         if self.request.user.is_staff or self.request.user.is_superuser:
             return Notification.objects.all()
         return Notification.objects.filter(user=self.request.user)
-    
+
     def perform_create(self, serializer):
         """
         Notifications are primarily created by signals
@@ -240,6 +253,10 @@ class MessageHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = MessageHistorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @method_decorator(cache_page(60))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+    
     def get_queryset(self):
         """
         Custom queryset to allow users to see history only for messages they sent or received.
