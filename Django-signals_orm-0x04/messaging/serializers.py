@@ -14,6 +14,16 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email']
         read_only_fields = ['username', 'email']
 
+class RecursiveMessageSerializer(serializers.Serializer):
+    """
+    Serializer for recursize display of message threads.
+    This helps in nesting replies within replies.
+    """
+    def to_representation(self, value):
+        # Lazily import MessageSerializer to avoid circular import issues
+        serializer = MessageSerializer(value, context=self.context)
+        return serializer.data
+
 class MessageSerializer(serializers.ModelSerializer):
     """
     Message model serializer
@@ -30,10 +40,32 @@ class MessageSerializer(serializers.ModelSerializer):
         queryset=User.objects.all()
     )
 
+    parent_message = serializers.PrimaryKeyRelatedField(
+        queryset=Message.objects.all(),
+        allow_null=True,
+        required=False,
+        label="Reply To Message ID"
+    )
+
+    # Using SerializerMethodField to display the nested replies (children)
+    # This will only be populated when explicitly fetched (e.g., in  the 'thread' action)
+    message_thread = serializers.SerializerMethodField()
+
     class Meta:
         model = Message
-        fields = ['id', 'sender', 'receiver', 'parent_message', 'content', 'timestamp', 'edited', 'edited_at']
+        fields = ['id', 'sender', 'receiver', 'parent_message', 'content', 'timestamp', 'edited', 'edited_at', 'message_thread']
         read_only_fields = ['timestamp', 'edited', 'edited_at']
+
+    def get_message_thread(self, obj):
+        """
+        Retrieves and serialises the direct replies to this message.
+        This method is called when 'message_thread' is accessed in the serializer.
+        """
+        # Ensure we only fetch direct children and apply relevant ordering
+        # For deeper recursion, limits of a different action should be condidered for performance.
+        # This will be specifically populated by the custom 'thread' action in the view.
+        replies = obj.message_thread.all().order_by('timestamp')
+        return RecursiveMessageSerializer(replies, many=True, context=self.context).data
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -68,4 +100,4 @@ class MessageHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = MessageHistory
         fields = ['id', 'message', 'edited_by', 'old_content', 'created_at']
-        read_only_field = ['message', 'edited_by', 'old_content', 'created_at']
+        read_only_fields = ['message', 'edited_by', 'old_content', 'created_at']

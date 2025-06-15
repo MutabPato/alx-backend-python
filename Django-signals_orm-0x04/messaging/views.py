@@ -2,18 +2,17 @@ from django.shortcuts import redirect
 from django.contrib.auth import logout
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from .models import Message, Notification, MessageHistory
-from .serializers import UserSerializer, MessageSerializer, NotificationSerializer, MessageHistorySerializer
+from .serializers import UserSerializer, MessageSerializer, NotificationSerializer, MessageHistorySerializer, RecursiveMessageSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.decorators import action
+from django.db.models import Q
 
 User = get_user_model()
 
 @login_required
-@csrf_exempt
 def delete_user(request):
     """
     Deletes a user account
@@ -44,7 +43,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAdminUser, permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """
@@ -52,9 +51,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         Admins can see all
         """
         if self.request.user.is_staff or self.request.user.is_superuser:
-            return Message.objects.select_related('parent_message').all()
-        
-        return Message.objects.select_related('parent_message').filter(sender=self.request.user) | Message.objects.select_related('parent_message').filter(receiver=self.request.user)
+            return Message.objects.select_related('sender', 'receiver','parent_message').all()
+
+        return Message.objects.select_related('sender', 'receiver', 'parent_message').filter(
+            Q(sender=self.request.user) | Q(receiver=self.request.user)
+            )
         
     
     def perform_create(self, serializer):
@@ -78,8 +79,73 @@ class MessageViewSet(viewsets.ModelViewSet):
         Ensure only the sender or an admin can delete a message.
         """
         if instance.sender != self.request.user and not self.request.user.is_staff:
-            raise permissions.PermissionDenied("You do not have permission to delte this message.")
-        instance.delete()   
+            raise permissions.PermissionDenied("You do not have permission to delete this message.")
+        instance.delete()
+
+    @action(detail=True, methods=['get'])
+    def thread(self, request, pk=None):
+        """
+        Custom action to retrieve a full message thread for a given message ID.
+        This fetches the root and all its descendants (replies).
+        It constructs a nested structure for the API response.
+        Access via /api/messages/{id}/thread/
+        """
+        try:
+            # Start by getting the root message ensuring user has access
+            root_message = self.get_queryset().get(pk=pk)
+        except Message.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        # Build a dictionary to hold messages and their children
+        messages_by_id = {root_message.id: root_message}
+        thread_messages = [root_message]
+
+        # Use a queue for a breadth-first or depth-first search for replies to ensure all descendants are fetched.
+        # Optimize by prefetching all related messages and users in one go
+        all_related_messages = Message.objects.select_related('sender', 'receiver', 'parent_message').filter(
+            Q(pk=pk) | Q(parent_message=pk) |
+            Q(parent_message__parent_message=pk) # Add more levels as needed for direct lookups
+        ).order_by('timestamp')
+
+
+        # Get all messages that could potentially be part of this thread
+        # This can be optimized by only fetching messages sent by or received by
+        # users involved in the root message, to limit the scope.
+        related_messages = Message.objects.select_related('sender', 'receiver', 'parent_message').filter(
+            Q(pk=root_message.pk) | # Include the root messsage
+            Q(parent_message=root_message) | # Include direct replies
+            Q(parent_message__in=root_message.message_thread.all()) # Include replies to direct replies
+            # This can be extended for more levels, or you implement a recursive fetchh in Python
+        ).order_by('timestamp')
+
+        # Reconstruct the thread hierarchy
+        thread_map = {msg.id: msg for msg in related_messages}
+        root_message_data = {}
+
+        def build_tree(message_id):
+            message = thread_map.get(message_id)
+            if not message:
+                return None
+            
+            serializer = MessageSerializer(message, context={'request': request})
+            data = serializer.data
+            data['message_thread'] = [] # Initialize children list
+
+            # Find direct children of this message
+            direct_children = [
+                msg for msg in related_messages
+                if msg.parent_message_id == message_id and msg.id != message_id
+            ]
+
+            for child in sorted(direct_children, key=lambda x: x.timestamp):
+                data['message_thread'].append(build_tree(child.id))
+            return data
+        
+        # Start building the tree from the root message
+        threaded_data = build_tree(root_message.id)
+
+        return Response(threaded_data)
+    
 
 class NotificationViewSet(viewsets.ModelViewSet):
     """
@@ -120,7 +186,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         Ensure users can only delete their own notifications.
         """
         if instance.user != self.request.user and not self.request.user.is_staff:
-            raise permissions.PermissionDenied("You do not have permission to delte this notification.")
+            raise permissions.PermissionDenied("You do not have permission to delete this notification.")
         instance.delete()     
 
 class MessageHistoryViewSet(viewsets.ReadOnlyModelViewSet):
