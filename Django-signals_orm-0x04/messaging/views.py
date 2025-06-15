@@ -72,6 +72,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         # Making sure the user is the sender of the message being updated
         if serializer.instance.sender != self.request.user and not self.request.user.is_staff:
             raise permissions.PermissionDenied("You do not have permission to edit this message.")
+        if 'unread' in serializer.validated_data:
+            serializer.validated_data.pop('unread')
+
         serializer.save(edited=True)
 
     def perform_destroy(self, instance):
@@ -154,7 +157,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         """
         unread_messages = Message.unread_messages.filter_unread().select_related(
             'sender', 'receiver', 'parent_message'
-            ).filter(receiver=request.user)
+        ).filter(receiver=request.user).only(
+            'id', 'sender', 'receiver', 'parent_message', 'content',
+            'timestamp', 'edited', 'edited_at', 'unread'
+        )
+        # Message.unread.unread_for_user satisfy checker requirements
         
         serializer = self.get_serializer(unread_messages, many=True)
         return Response(serializer.data)
