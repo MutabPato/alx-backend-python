@@ -19,7 +19,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # 6. Copying the rest of the code into the container
 COPY . .
 
-# 7. Exposing default network port
+# 7. Exposing default network port (-p)
 EXPOSE 8000
 
 # 8. Running django app server/ Default cmd for development (can be overwritten in docker-compose)
