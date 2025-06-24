@@ -9,7 +9,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # 4. Installing system dependencies
-# RUN apt-get update && apt-get install -y netcat && rm -rf /var/lib/apt/lists/* 
+RUN apt-get update && apt-get install -y \
+    default-libmysqlclient-dev \
+    build-essential \
+    pkg-config \
+    && apt-get clean
 
 # 5. Installing applications dependencies
 COPY requirements.txt .
