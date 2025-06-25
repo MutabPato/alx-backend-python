@@ -3,4 +3,5 @@
 minikube start # Starting a kubernetes cluster
 minikube status # Checking cluster status
 kubectl cluster-info # Verifying that the cluster is running
-kubectl get nodes # Retrieving available pods
+kubectl get nodes 
+kubectl get pods # Retrieving available pods
