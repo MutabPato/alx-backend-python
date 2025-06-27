@@ -4,11 +4,16 @@ kind: Deployment
 metadata: 
   name: django-green-deployment
 spec:
-  replicas: 3 # Running 3 replicas for high availability
+  replicas: 4 # Running 4 replicas for high availability
   selector:
     matchLabels:
       app: django
       version: green
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   template:
     metadata:
       labels:

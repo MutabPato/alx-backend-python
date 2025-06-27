@@ -4,16 +4,21 @@ kind: Deployment
 metadata: 
   name: django-blue-deployment
 spec:
-  replicas: 3 # Running 3 replicas for high availability
+  replicas: 4 # Running 4 replicas for high availability
   selector:
     matchLabels:
       app: django
-      version: blue
+      version: "2.0"
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   template:
     metadata:
       labels:
         app: django
-        version: blue
+        version: "2.0"
     spec:
       containers:
         - name: django-app
