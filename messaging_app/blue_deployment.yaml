@@ -1,0 +1,28 @@
+# Deploys our Django application
+apiVersion: apps/v1 
+kind: Deployment
+metadata: 
+  name: django-blue-deployment
+spec:
+  replicas: 3 # Running 3 replicas for high availability
+  selector:
+    matchLabels:
+      app: django
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: django
+        version: blue
+    spec:
+      containers:
+        - name: django-app
+          image: messaging_app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: django-mysql-configmap
+            - secretRef:
+                name: django-mysql-secrets
