@@ -32,7 +32,7 @@ pipeline {
             steps {
                 echo 'Installing Python dependencies from requirements.txt...'
                 // '--no-cache-dir' helps keep the Docker image layers when building a custom image later.
-                sh 'pip install --no-cache-dir -r requirements.txt'
+                sh 'pip3 install --no-cache-dir -r messaging_app/requirements.txt'
             }
         }
         stage('Run Tests') {
