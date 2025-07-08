@@ -1,0 +1,9 @@
+
+2025-06-08 11:07:56.304643 - User: Joy(email: 'happy@example.com', id: '01180745-e19e-400d-9325-5d49169b8375') - Path: /
+2025-06-08 11:08:58.585756 - User: Joy(email: 'happy@example.com', id: '01180745-e19e-400d-9325-5d49169b8375') - Path: / api/token
+2025-06-08 11:09:07.416828 - User: Joy(email: 'happy@example.com', id: '01180745-e19e-400d-9325-5d49169b8375') - Path: / api/token/
+2025-06-08 11:09:49.861255 - User: AnonymousUser - Path: /
+2025-06-08 11:09:50.214410 - User: AnonymousUser - Path: /favicon.ico
+2025-06-08 11:10:00.571427 - User: AnonymousUser - Path: /api/token/
+2025-06-08 11:10:33.385490 - User: AnonymousUser - Path: /api/token/
+2025-06-08 11:18:16.036299 - User: AnonymousUser - Path: /api/token/

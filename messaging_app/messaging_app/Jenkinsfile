@@ -17,7 +17,7 @@ pipeline {
         stage('Checkout Source') {
             steps {
                 echo 'Checking out source code from Github...'
-                git branch: 'main', credentialsId: env.GITHUB_CREDENTIALS_ID, url: GITHUB_REPO_URL
+                git branch: 'master', credentialsId: env.GITHUB_CREDENTIALS_ID, url: GITHUB_REPO_URL
             }
         }
         stage('Install Dependencies') {
