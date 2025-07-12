@@ -34,7 +34,7 @@ jobs:
       - name: Determine Image Tags
         id: determine_tags
         run: |
-          IMAGE_NAME="MutabPato/messaging_app"
+          IMAGE_NAME="mutabpato/messaging_app"
 
           DEFAULT_TAG="${{ github.sha }}"
 
