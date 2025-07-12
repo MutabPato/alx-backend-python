@@ -53,7 +53,7 @@ jobs:
         # This action builds your Docker image and pushes it to the configured registry
         uses: docker/build-push-action@v5
         with:
-          context: . # The build context (usually the root of the repository)
+          context: messaging_app/ # The build context
           file: ./messaging_app/Dockerfile # Path to the Dockerfile (assuming it's in the root)
           push: true # Set to true to push to Docker Hub
           tags: ${{ steps.determine_tags.outputs.tags }} # Use the tags determined in the previous step
