@@ -1,3 +1,5 @@
+# .github/workflows/ci.yml
+
 name: Messaging App CI/CD
 
 on:
@@ -12,21 +14,22 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-  # Services needed for this job. Here, a MySQL database.
-  services:
-    mysql:
-      image: mysql:8.0
-      env:
-        MYSQL_ROOT_PASSWORD: root_password_for_ci
-        MYSQL_DATABASE: messaging_app_test_db
-        MYSQL_USER: django_ci_user 
-        MYSQL_PASSWORD: django_ci_password 
-    # Health check to ensure MySQL is ready before tests run.
-    option: >
-      --health-cmd="mysqladmin -h 127.0.0.1 -u django_ci_user -django_ci_password "
-      --health-interval=10s
-      --health-timeout=5s
-      --health-retries=10
+    # Services needed for this job. Here, a MySQL database.
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password_for_ci
+          MYSQL_DATABASE: messaging_app_test_db
+          MYSQL_USER: django_ci_user
+          MYSQL_PASSWORD: django_ci_password
+        # Corrected: 'options' (plural) instead of 'option'
+        options: >
+          # Corrected: Added 'ping' command and proper password syntax '-p<password>'
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u django_ci_user -pdjango_ci_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     # Env variables for the job. Will be accessible by the Django app
     # Via os.environ.get() in settings.py
@@ -34,7 +37,7 @@ jobs:
       DATABASE_NAME: messaging_app_test_db
       DATABASE_USER: django_ci_user
       DATABASE_PASSWORD: django_ci_password
-      DATABASE_HOST: mysql
+      DATABASE_HOST: mysql # This is the service name, which acts as the hostname within GitHub Actions
       DATABASE_PORT: 3306
 
     steps:
@@ -49,17 +52,22 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          python3 -m pip install --upgrade pip 
-          pip3 install -r requirements.txt
-          pip3 install mysqlclient pytest pytest-django
+          # It's generally better to use 'python' and 'pip' after actions/setup-python,
+          # as it configures them to point to the correct version.
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install mysqlclient pytest pytest-django # Ensure these are installed for testing
 
       - name: Run Linting (flake8)
         run: |
-          pip3 install flake8
+          pip install flake8 # Install flake8 if not in requirements.txt
           flake8 .
-        continue-on-error: true # ALlow subsequent steps to run even if linting has warnings
+        continue-on-error: true # Allow subsequent steps to run even if linting has warnings
 
       - name: Run Pytest Tests
+        # This will run pytest, which is appropriate if you're using pytest-django.
+        # If you prefer Django's built-in test runner, change this to:
+        # run: python manage.py test
         run: pytest --junitxml=test-results.xml # Run tests and generate JUnit XML report
 
       - name: Upload Test Results (Artifact)
@@ -68,4 +76,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: test-results.xml
+          path: test-results.xml # Ensure your test command outputs to this file
+
