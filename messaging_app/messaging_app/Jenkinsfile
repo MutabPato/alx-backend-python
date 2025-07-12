@@ -71,7 +71,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up workspace...'
-            cleansws() // Cleans the Jenkins workspace directory, useful for freeing up disk space.
+            cleansWs() // Cleans the Jenkins workspace directory, useful for freeing up disk space.
         }
         success {
             echo 'Pipeline succeeded! ALl stages completed, and test report generated.'
