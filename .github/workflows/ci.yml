@@ -23,12 +23,6 @@ jobs:
           MYSQL_DATABASE: messaging_app_test_db
           MYSQL_USER: django_ci_user
           MYSQL_PASSWORD: django_ci_password
-        
-        options: |-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u django_ci_user -pdjango_ci_password"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
 
     # Env variables for the job. Will be accessible by the Django app
     # Via os.environ.get() in settings.py
@@ -48,6 +42,21 @@ jobs:
         with:
           python-version: '3.9'
           cache: 'pip' # Cache pip dependencies for faster builds
+
+      - name: Wait for MySQL service
+        run: |
+          # Loop until mysqladmin ping succeeds, indicating the database is ready
+          # This is more robust than relying solely on service health checks in some cases.
+          for i in $(seq 1 30); do # Try for up to 300 seconds (30 * 10s)
+            mysqladmin ping -h "$DATABASE_HOST" -u "$DATABASE_USER" -p"$DATABASE_PASSWORD" && s=0 && break || s=$?
+            echo "Waiting for MySQL to be ready... ($i/30)"
+            sleep 10
+          done
+          if [ "$s" -ne 0 ]; then
+            echo "MySQL service did not become ready in time."
+            exit 1
+          fi
+          echo "MySQL service is ready!"
 
       - name: Install Dependencies
         run: |
