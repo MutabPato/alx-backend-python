@@ -25,7 +25,6 @@ jobs:
           MYSQL_PASSWORD: django_ci_password
         # Corrected: 'options' (plural) instead of 'option'
         options: >
-          # Corrected: Added 'ping' command and proper password syntax '-p<password>'
           --health-cmd="mysqladmin ping -h 127.0.0.1 -u django_ci_user -pdjango_ci_password"
           --health-interval=10s
           --health-timeout=5s
