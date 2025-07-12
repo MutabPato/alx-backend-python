@@ -54,7 +54,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: . # The build context (usually the root of the repository)
-          file: ./Dockerfile # Path to the Dockerfile (assuming it's in the root)
+          file: ./messaging_app/Dockerfile # Path to the Dockerfile (assuming it's in the root)
           push: true # Set to true to push to Docker Hub
           tags: ${{ steps.determine_tags.outputs.tags }} # Use the tags determined in the previous step
           
